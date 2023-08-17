@@ -9,7 +9,7 @@ from environment.env import *
 
 if __name__ == "__main__":
     cfg = get_cfg()
-    # vessl.init(organization="snu-eng-dgx", project="SSY", hp=cfg)
+    vessl.init(organization="snu-eng-dgx", project="nesting", hp=cfg)
 
     lr = cfg.lr
     gamma = cfg.gamma
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         while not done:
             possible_actions = env.get_possible_actions()
             a, prob, mask = agent.get_action(s, possible_actions)
-            s_prime, r, done = env.step(a)
+            s_prime, r, efficiency, done = env.step(a)
 
             agent.put_data((s, a[0], a[1], a[2], r, s_prime, prob[0], prob[1], prob[2], mask, done))
             s = s_prime
@@ -68,6 +68,8 @@ if __name__ == "__main__":
             update_step += 1
 
             if done:
+                vessl.log(step=e, payload={'reward': r_epi})
+                vessl.log(step=e, payload={'efficiency': efficiency})
                 break
             avg_loss += agent.train()
 

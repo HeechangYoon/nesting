@@ -46,10 +46,10 @@ class HiNEST(object):
         if (len(self.model.part_list) == 0) | overlap:
             done = True
 
-        reward = self._calculate_reward(overlap, done)
+        reward, efficiency = self._calculate_reward(overlap, done)
         next_state = self._get_state()
 
-        return next_state, reward, done
+        return next_state, reward, efficiency, done
 
     def reset(self):
         plate, part_list = generate_data(self.raw_part_list,
@@ -73,6 +73,7 @@ class HiNEST(object):
 
     def _calculate_reward(self, overlap, done):
         reward = 0
+        efficiency = 0
         if overlap:
             reward -= (len(self.model.part_list) + 1) / self.model.part_num
         if done:
@@ -84,8 +85,10 @@ class HiNEST(object):
                 start_row, start_col = non_zero_rows.min(), non_zero_cols.min()
                 end_row, end_col = non_zero_rows.max() + 1, non_zero_cols.max() + 1
                 assigned = plate_a[start_row:end_row, start_col:end_col]
+
+                efficiency += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
                 reward += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
-        return reward
+        return reward, efficiency
 
     def _get_state(self):
         state = np.zeros(self.state_size)
@@ -138,7 +141,7 @@ if __name__ == "__main__":
         angle = random.choice(possible_a)
         a = (0, 0, angle)
 
-        s_prime, r, d = nest.step(a)
+        s_prime, r, efficiency, d = nest.step(a)
         print(d)
         r_cum += r
         print(r_cum)
