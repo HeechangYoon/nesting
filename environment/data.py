@@ -44,19 +44,19 @@ class Part():
 
 
 def read_data():
-    with open('./input/3212-A31-001_100.pickle', 'rb') as f:
+    with open('/input/3212-A31-001_100.pickle', 'rb') as f:
         raw_data_A31 = pickle.load(f)
 
-    with open('./input/3212-E31-001_100.pickle', 'rb') as f:
+    with open('/input/3212-E31-001_100.pickle', 'rb') as f:
         raw_data_E31 = pickle.load(f)
 
-    with open('./input/3212-E42-001_100.pickle', 'rb') as f:
+    with open('/input/3212-E42-001_100.pickle', 'rb') as f:
         raw_data_E42 = pickle.load(f)
 
-    with open('./input/3212-E52-001_100.pickle', 'rb') as f:
+    with open('/input/3212-E52-001_100.pickle', 'rb') as f:
         raw_data_E52 = pickle.load(f)
 
-    with open('./input/3212-F41-001_100.pickle', 'rb') as f:
+    with open('/input/3212-F41-001_100.pickle', 'rb') as f:
         raw_data_F41 = pickle.load(f)
 
     raw_part_list = raw_data_A31 + raw_data_E31 + raw_data_E42 + raw_data_E52 + raw_data_F41

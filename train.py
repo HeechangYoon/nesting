@@ -18,15 +18,15 @@ if __name__ == "__main__":
     K_epoch = cfg.K_epoch
     T_horizon = cfg.T_horizon
 
-    model_dir = './output/train/model/'
+    model_dir = '/output/train/model/'
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    log_dir = './output/train/log/'
+    log_dir = '/output/train/log/'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    simulation_dir = './output/train/simulation/'
+    simulation_dir = '/output/train/simulation/'
     if not os.path.exists(simulation_dir):
         os.makedirs(simulation_dir)
 
