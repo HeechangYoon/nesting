@@ -59,6 +59,7 @@ def read_data():
     with open('/input/3212-F41-001_100.pickle', 'rb') as f:
         raw_data_F41 = pickle.load(f)
 
+    a=1
     raw_part_list = raw_data_A31 + raw_data_E31 + raw_data_E42 + raw_data_E52 + raw_data_F41
     raw_part_list = [Part(qq.Area, qq.PixelPart) for qq in raw_part_list]
     raw_part_list.sort(key=lambda x: -x.Area)
