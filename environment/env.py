@@ -81,13 +81,16 @@ class HiNEST(object):
                 plate = self.model.plate
                 plate_a = plate.PixelPlate[0:plate.pixel_l, 0:plate.pixel_b]
 
-                non_zero_rows, non_zero_cols = np.nonzero(plate_a)
-                start_row, start_col = non_zero_rows.min(), non_zero_cols.min()
-                end_row, end_col = non_zero_rows.max() + 1, non_zero_cols.max() + 1
-                assigned = plate_a[start_row:end_row, start_col:end_col]
+                # non_zero_rows, non_zero_cols = np.nonzero(plate_a)
+                # start_row, start_col = non_zero_rows.min(), non_zero_cols.min()
+                # end_row, end_col = non_zero_rows.max() + 1, non_zero_cols.max() + 1
+                # assigned = plate_a[start_row:end_row, start_col:end_col]
+                #
+                # efficiency += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
+                # reward += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
 
-                efficiency += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
-                reward += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
+                efficiency += np.sum(plate_a) / (plate.pixel_l * plate.pixel_b)
+                reward += np.sum(plate_a) / (plate.pixel_l * plate.pixel_b)
         return reward, efficiency
 
     def _get_state(self):
