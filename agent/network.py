@@ -32,9 +32,9 @@ class Network(nn.Module):
     def x_pi(self, x):
         x = F.leaky_relu(self.conv1(x))
         x = self.pool1(x)
+        x = F.leaky_relu(self.conv2(x))
+        x = self.pool2(x)
 
-        # x = x.squeeze(2)
-        # x = F.relu(self.conv2(x))
         x = x.contiguous().view(-1, 32 * 52 * 11)
         x = F.leaky_relu(self.fc1(x))
         x = F.leaky_relu(self.fc2(x))
@@ -45,8 +45,9 @@ class Network(nn.Module):
     def y_pi(self, x):
         x = F.leaky_relu(self.conv1(x))
         x = self.pool1(x)
-        # x = x.squeeze(2)
-        # x = F.relu(self.conv2(x))
+        x = F.leaky_relu(self.conv2(x))
+        x = self.pool2(x)
+
         x = x.contiguous().view(-1, 32 * 52 * 11)
         x = F.leaky_relu(self.fc1(x))
         x = F.leaky_relu(self.fc2(x))
@@ -57,8 +58,9 @@ class Network(nn.Module):
     def a_pi(self, x):
         x = F.leaky_relu(self.conv1(x))
         x = self.pool1(x)
-        # x = x.squeeze(2)
-        # x = F.relu(self.conv2(x))
+        x = F.leaky_relu(self.conv2(x))
+        x = self.pool2(x)
+
         x = x.contiguous().view(-1, 32 * 52 * 11)
         x = F.leaky_relu(self.fc1(x))
         x = F.leaky_relu(self.fc2(x))
@@ -69,8 +71,9 @@ class Network(nn.Module):
     def v(self, x):
         x = F.leaky_relu(self.conv1(x))
         x = self.pool1(x)
-        # x = x.squeeze(2)
-        # x = F.relu(self.conv2(x))
+        x = F.leaky_relu(self.conv2(x))
+        x = self.pool2(x)
+
         x = x.contiguous().view(-1, 32 * 52 * 11)
         x = F.leaky_relu(self.fc1(x))
         x = F.leaky_relu(self.fc2(x))
