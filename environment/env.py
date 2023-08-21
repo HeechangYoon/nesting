@@ -74,8 +74,8 @@ class HiNEST(object):
     def _calculate_reward(self, overlap, done):
         reward = 0
         efficiency = 0
-        if overlap:
-            reward -= (len(self.model.part_list) + 1) / self.model.part_num
+        # if overlap:
+        #     reward -= (len(self.model.part_list) + 1) / self.model.part_num
         if done:
             if len(self.model.part_list) + 1 != self.model.part_num:
                 plate = self.model.plate
