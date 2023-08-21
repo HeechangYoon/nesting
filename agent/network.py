@@ -16,9 +16,9 @@ class Network(nn.Module):
         self.y_action_size = y_action_size
         self.a_action_size = a_action_size
 
-        self.conv1 = nn.Conv2d(in_channels=state_size[-1], out_channels=16, kernel_size=3)
+        self.conv1 = nn.Conv2d(in_channels=state_size[-1], out_channels=16, kernel_size=3, stride=1, padding=1)
         self.pool1 = nn.AvgPool2d(kernel_size=2, stride=2)
-        self.conv2 = nn.Conv2d(in_channels=state_size[-1], out_channels=32, kernel_size=3)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
         self.pool2 = nn.AvgPool2d(kernel_size=2, stride=2)
         # self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
         self.fc1 = nn.Linear(32 * 52 * 11, 128)
