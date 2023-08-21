@@ -103,7 +103,6 @@ class Agent:
             x_pi = torch.softmax(x_logit, dim=-1)
             x_pi_a = x_pi.gather(1, x_a)
             x_ratio = torch.log(x_pi_a) - torch.log(x_prob_a)  # a/b == exp(log(a)-log(b))
-
             x_ratio.clamp_(max=88).exp()
 
             x_surr1 = x_ratio * advantage
