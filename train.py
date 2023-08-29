@@ -90,7 +90,7 @@ if __name__ == "__main__":
             possible_x, possible_y = env.get_possible_positions(a)
             a_x, a_y, prob_x, prob_y, mask_x, mask_y = agent.get_position(s, possible_x, possible_y)
 
-            s_prime, r, efficiency, done, overlap, temp = env.step((a_x, a_y, a))
+            s_prime, r, efficiency, batch_rate, done, overlap, temp = env.step((a_x, a_y, a))
 
             agent.put_data((s, a_x, a_y, a, r, s_prime, prob_x, prob_y, prob, mask_x, mask_y, mask, done))
             s = s_prime
