@@ -8,7 +8,7 @@ from environment.simulation import Management
 
 
 class HiNEST(object):
-    def __init__(self, look_ahead=2,  # 상태 구성 시 포함할 부재의 수
+    def __init__(self, look_ahead=5,  # 상태 구성 시 포함할 부재의 수
                  plate_l_min=3000,  # 생성될 강재의 최소 길이
                  plate_l_max=21000,  # 생성될 강재의 최대 길이
                  plate_b_min=1000,  # 생성될 강재의 최소 폭
@@ -36,20 +36,20 @@ class HiNEST(object):
         self.x_action_size = int(math.ceil(plate_l_max / 100) / self.window)
         self.y_action_size = int(math.ceil(plate_b_max / 100) / self.window)
         self.a_action_size = 24
-        self.state_size = (plate.pixel_l_max, plate.pixel_b_max, look_ahead + 1)
+        self.state_size = (plate.pixel_l_max, plate.pixel_b_max * (look_ahead + 1), 1)
 
     def step(self, action):
         done = False
 
-        overlap = self.model.assign(action)
+        overlap, temp = self.model.assign(action)
 
-        if (len(self.model.part_list) == 0) | overlap:
+        if len(self.model.part_list) == 0:
             done = True
 
-        reward, efficiency = self._calculate_reward(overlap, done)
+        reward, efficiency, batch_rate = self._calculate_reward(done)
         next_state = self._get_state()
 
-        return next_state, reward, efficiency, done
+        return next_state, reward, efficiency, batch_rate, done, overlap, temp
 
     def reset(self):
         plate, part_list = generate_data(self.raw_part_list,
@@ -71,51 +71,57 @@ class HiNEST(object):
                 possible_actions.append(i)
         return possible_actions
 
-    def _calculate_reward(self, overlap, done):
+    def get_possible_positions(self, theta):
+        size = self.model.part_list[0].PixelPart[theta].shape
+        possible_x = list(range(math.floor((self.model.plate.pixel_l - size[0]) / 5)+1))
+        possible_y = list(range(math.floor((self.model.plate.pixel_b - size[1]) / 5)+1))
+        return possible_x, possible_y
+
+    def _calculate_reward(self, done):
         reward = 0
-        efficiency = 0
-        # if overlap:
-        #     reward -= (len(self.model.part_list) + 1) / self.model.part_num
+        batch_rate = self.model.batch_num / self.model.part_num
+
+        plate = self.model.plate
+        plate_a = plate.PixelPlate[0:plate.pixel_l, 0:plate.pixel_b]
+
+        non_zero_rows, non_zero_cols = np.nonzero(plate_a)
+        # start_row, start_col = non_zero_rows.min(), non_zero_cols.min()
+        end_row, end_col = non_zero_rows.max() + 1, non_zero_cols.max() + 1
+        assigned = plate_a[0:end_row, 0:end_col]
+
+        efficiency = np.sum(assigned) / ((end_row - 0) * (end_col - 0))
+        reward += efficiency
+
         if done:
-            if len(self.model.part_list) + 1 != self.model.part_num:
-                plate = self.model.plate
-                plate_a = plate.PixelPlate[0:plate.pixel_l, 0:plate.pixel_b]
+            reward -= 1 - batch_rate
 
-                # non_zero_rows, non_zero_cols = np.nonzero(plate_a)
-                # start_row, start_col = non_zero_rows.min(), non_zero_cols.min()
-                # end_row, end_col = non_zero_rows.max() + 1, non_zero_cols.max() + 1
-                # assigned = plate_a[start_row:end_row, start_col:end_col]
-                #
-                # efficiency += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
-                # reward += np.sum(assigned) / ((end_row - start_row) * (end_col - start_col))
-
-                efficiency += np.sum(plate_a) / (plate.pixel_l * plate.pixel_b)
-                reward += np.sum(plate_a) / (plate.pixel_l * plate.pixel_b)
-        return reward, efficiency
+        return reward, efficiency, batch_rate
 
     def _get_state(self):
         state = np.zeros(self.state_size)
 
-        state[:, :, 0] = self.model.plate.PixelPlate
+        plate_size = math.ceil(self.plate_b_max / 100)
+
+        state[:, :plate_size, 0] = self.model.plate.PixelPlate
 
         for depth in range(self.look_ahead):
-            temp = np.zeros(self.state_size[:2])
+            temp = np.zeros((self.state_size[0], plate_size))
 
             if depth < len(self.model.part_list):
                 i = 0
                 while True:
                     part_shape = self.model.part_list[depth].PixelPart[i].shape
-                    if (part_shape[0] <= self.state_size[0]) & (part_shape[1] <= self.state_size[1]):
+                    if (part_shape[0] <= self.state_size[0]) & (part_shape[1] <= plate_size):
                         break
                     i += 1
 
                 start_row = (self.state_size[0] - part_shape[0]) // 2
-                start_col = (self.state_size[1] - part_shape[1]) // 2
+                start_col = (plate_size - part_shape[1]) // 2
 
                 temp[start_row:start_row + part_shape[0], start_col:start_col + part_shape[1]] = \
                 self.model.part_list[depth].PixelPart[i]
 
-            state[:, :, depth + 1] = temp
+            state[:, (depth+1)*plate_size:(depth+2)*plate_size, 0] = temp
 
         return state
 

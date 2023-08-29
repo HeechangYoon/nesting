@@ -29,9 +29,9 @@ class Agent:
         self.data.append(transition)
 
     def make_batch(self):
-        s_lst, x_a_lst, y_a_lst, a_a_lst, r_lst, s_prime_lst, x_prob_a_lst, y_prob_a_lst, a_prob_a_lst, mask_lst, done_lst = [], [], [], [], [], [], [], [], [], [], []
+        s_lst, x_a_lst, y_a_lst, a_a_lst, r_lst, s_prime_lst, x_prob_a_lst, y_prob_a_lst, a_prob_a_lst, x_mask_lst, y_mask_lst, a_mask_lst, done_lst = [], [], [], [], [], [], [], [], [], [], [], [], []
         for transition in self.data:
-            s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, mask, done = transition
+            s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, x_mask, y_mask, a_mask, done = transition
 
             s_lst.append(s)
             x_a_lst.append([x_a])
@@ -42,48 +42,72 @@ class Agent:
             x_prob_a_lst.append([x_prob_a])
             y_prob_a_lst.append([y_prob_a])
             a_prob_a_lst.append([a_prob_a])
-            mask_lst.append(mask)
+            x_mask_lst.append(x_mask)
+            y_mask_lst.append(y_mask)
+            a_mask_lst.append(a_mask)
             done_mask = 0 if done else 1
             done_lst.append([done_mask])
 
-        s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, mask, done = torch.tensor(s_lst, dtype=torch.float).to(device), torch.tensor(x_a_lst).to(device), \
+        s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, x_mask, y_mask, a_mask, done = torch.tensor(s_lst, dtype=torch.float).to(device), torch.tensor(x_a_lst).to(device), \
                                                                                  torch.tensor(y_a_lst).to(device), torch.tensor(a_a_lst).to(device), \
                                                                                  torch.tensor(r_lst, dtype=torch.float).to(device), torch.tensor(s_prime_lst, dtype=torch.float).to(device), \
                                                                                  torch.tensor(x_prob_a_lst).to(device), torch.tensor(y_prob_a_lst).to(device), \
-                                                                                 torch.tensor(a_prob_a_lst).to(device), torch.tensor(mask_lst).to(device), \
+                                                                                 torch.tensor(a_prob_a_lst).to(device), torch.tensor(x_mask_lst).to(device), \
+                                                                                 torch.tensor(y_mask_lst).to(device), torch.tensor(a_mask_lst).to(device), \
                                                                                  torch.tensor(done_lst, dtype=torch.float).to(device)
 
         self.data = []
-        return s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, mask, done
+        return s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, x_mask, y_mask, a_mask, done
 
     def get_action(self, s, possible_actions):
         s = torch.from_numpy(s).float().to(device).unsqueeze(0)
-        x_logit = self.network.x_pi(s.permute(0, 3, 1, 2))
-        y_logit = self.network.y_pi(s.permute(0, 3, 1, 2))
+
         a_logit = self.network.a_pi(s.permute(0, 3, 1, 2))
 
         mask = np.ones(self.a_action_size)
         mask[possible_actions] = 0.0
         a_logit = a_logit - 1e8 * torch.from_numpy(mask).float().to(device)
 
-        x_prob = torch.softmax(x_logit, dim=-1)[0]
-        y_prob = torch.softmax(y_logit, dim=-1)[0]
         a_prob = torch.softmax(a_logit, dim=-1)[0]
 
-        x_m = Categorical(x_prob)
-        y_m = Categorical(y_prob)
         a_m = Categorical(a_prob)
-        x = x_m.sample().item()
-        y = y_m.sample().item()
         angle = a_m.sample().item()
 
-        a = (x, y, angle)
-        prob = (x_prob[x].item(), y_prob[y].item(), a_prob[angle].item())
+        a = angle
+        prob = a_prob[angle].item()
 
         return a, prob, mask
 
+    def get_position(self, s, possible_x, possible_y):
+        s = torch.from_numpy(s).float().to(device).unsqueeze(0)
+        x_logit = self.network.x_pi(s.permute(0, 3, 1, 2))
+        y_logit = self.network.y_pi(s.permute(0, 3, 1, 2))
+
+        mask_x = np.ones(self.x_action_size)
+        mask_x[possible_x] = 0.0
+        x_logit = x_logit - 1e8 * torch.from_numpy(mask_x).float().to(device)
+
+        mask_y = np.ones(self.y_action_size)
+        mask_y[possible_y] = 0.0
+        y_logit = y_logit - 1e8 * torch.from_numpy(mask_y).float().to(device)
+
+        x_prob = torch.softmax(x_logit, dim=-1)[0]
+        y_prob = torch.softmax(y_logit, dim=-1)[0]
+
+        x_m = Categorical(x_prob)
+        y_m = Categorical(y_prob)
+        x = x_m.sample().item()
+        y = y_m.sample().item()
+
+        a_x = x
+        a_y = y
+        prob_x = x_prob[x].item()
+        prob_y = y_prob[y].item()
+
+        return a_x, a_y, prob_x, prob_y, mask_x, mask_y
+
     def train(self):
-        s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, mask, done = self.make_batch()
+        s, x_a, y_a, a_a, r, s_prime, x_prob_a, y_prob_a, a_prob_a, x_mask, y_mask, a_mask, done = self.make_batch()
         avg_loss = 0.0
 
         for i in range(self.K_epoch):
@@ -100,6 +124,7 @@ class Agent:
             advantage = torch.tensor(advantage_lst, dtype=torch.float).to(device)
 
             x_logit = self.network.x_pi(s.permute(0, 3, 1, 2))
+            x_logit = x_logit.float() - 1e8 * x_mask.float()
             x_pi = torch.softmax(x_logit, dim=-1)
             x_pi_a = x_pi.gather(1, x_a)
             x_ratio = torch.log(x_pi_a) - torch.log(x_prob_a)  # a/b == exp(log(a)-log(b))
@@ -109,7 +134,8 @@ class Agent:
             x_surr2 = torch.clamp(x_ratio, 1 - self.eps_clip, 1 + self.eps_clip) * advantage
             x_loss = -torch.min(x_surr1, x_surr2)
 
-            y_logit = self.network.x_pi(s.permute(0, 3, 1, 2))
+            y_logit = self.network.y_pi(s.permute(0, 3, 1, 2))
+            y_logit = y_logit.float() - 1e8 * y_mask.float()
             y_pi = torch.softmax(y_logit, dim=-1)
             y_pi_a = y_pi.gather(1, y_a)
             y_ratio = torch.log(y_pi_a) - torch.log(y_prob_a)  # a/b == exp(log(a)-log(b))
@@ -120,6 +146,7 @@ class Agent:
             y_loss = -torch.min(y_surr1, y_surr2)
 
             a_logit = self.network.a_pi(s.permute(0, 3, 1, 2))
+            a_logit = a_logit.float() - 1e8 * a_mask.float()
             a_pi = torch.softmax(a_logit, dim=-1)
             a_pi_a = a_pi.gather(1, a_a)
             a_ratio = torch.log(a_pi_a) - torch.log(a_prob_a)  # a/b == exp(log(a)-log(b))

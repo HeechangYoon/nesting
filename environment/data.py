@@ -104,8 +104,8 @@ def generate_data(raw_part_list,  # 샘플링 대상이 되는 픽셀 이미지 
         part = raw_part_list[index]
         remain_area -= part.Pixel_Area
         part_list.append(part)
-        # if remain_area < plate.Pixel_Area * 0.2:
-        #     break
+        if remain_area < plate.Pixel_Area * 0.2:
+            break
 
     part_list = copy.deepcopy(part_list)
 

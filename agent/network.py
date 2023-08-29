@@ -16,21 +16,21 @@ class Network(nn.Module):
         self.y_action_size = y_action_size
         self.a_action_size = a_action_size
 
-        self.conv1 = nn.Conv2d(in_channels=state_size[-1], out_channels=16, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
         self.pool1 = nn.AvgPool2d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
         self.pool2 = nn.AvgPool2d(kernel_size=2, stride=2)
         # self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
-        self.fc1_x = nn.Linear(32 * 52 * 11, 1024)
+        self.fc1_x = nn.Linear(52 * 67 * 32, 1024)
         self.fc2_x = nn.Linear(1024, 512)
         self.fc3_x = nn.Linear(512, 256)
-        self.fc1_y = nn.Linear(32 * 52 * 11, 1024)
+        self.fc1_y = nn.Linear(52 * 67 * 32, 1024)
         self.fc2_y = nn.Linear(1024, 512)
         self.fc3_y = nn.Linear(512, 256)
-        self.fc1_a = nn.Linear(32 * 52 * 11, 1024)
+        self.fc1_a = nn.Linear(52 * 67 * 32, 1024)
         self.fc2_a = nn.Linear(1024, 512)
         self.fc3_a = nn.Linear(512, 256)
-        self.fc1_v = nn.Linear(32 * 52 * 11, 1024)
+        self.fc1_v = nn.Linear(52 * 67 * 32, 1024)
         self.fc2_v = nn.Linear(1024, 512)
         self.fc3_v = nn.Linear(512, 256)
         self.fc_x_pi = nn.Linear(256, x_action_size)
@@ -44,7 +44,7 @@ class Network(nn.Module):
         x = F.leaky_relu(self.conv2(x))
         x = self.pool2(x)
 
-        x = x.contiguous().view(-1, 32 * 52 * 11)
+        x = x.contiguous().view(-1, 52 * 67 * 32)
         x = F.leaky_relu(self.fc1_x(x))
         x = F.leaky_relu(self.fc2_x(x))
         x = F.leaky_relu(self.fc3_x(x))
@@ -57,7 +57,7 @@ class Network(nn.Module):
         x = F.leaky_relu(self.conv2(x))
         x = self.pool2(x)
 
-        x = x.contiguous().view(-1, 32 * 52 * 11)
+        x = x.contiguous().view(-1, 52 * 67 * 32)
         x = F.leaky_relu(self.fc1_y(x))
         x = F.leaky_relu(self.fc2_y(x))
         x = F.leaky_relu(self.fc3_y(x))
@@ -70,7 +70,7 @@ class Network(nn.Module):
         x = F.leaky_relu(self.conv2(x))
         x = self.pool2(x)
 
-        x = x.contiguous().view(-1, 32 * 52 * 11)
+        x = x.contiguous().view(-1, 52 * 67 * 32)
         x = F.leaky_relu(self.fc1_a(x))
         x = F.leaky_relu(self.fc2_a(x))
         x = F.leaky_relu(self.fc3_a(x))
@@ -83,7 +83,7 @@ class Network(nn.Module):
         x = F.leaky_relu(self.conv2(x))
         x = self.pool2(x)
 
-        x = x.contiguous().view(-1, 32 * 52 * 11)
+        x = x.contiguous().view(-1, 52 * 67 * 32)
         x = F.leaky_relu(self.fc1_v(x))
         x = F.leaky_relu(self.fc2_v(x))
         x = F.leaky_relu(self.fc3_v(x))

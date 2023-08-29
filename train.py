@@ -6,6 +6,23 @@ from torch.utils.tensorboard import SummaryWriter
 from agent.ppo import *
 from environment.env import *
 
+from PIL import Image
+
+def save_image(image_data, file_path):
+    image_data = np.array(image_data) * 255  # Convert 0s and 1s to 0s and 255s
+    image_data = image_data.astype(np.uint8)  # Convert to unsigned 8-bit integers
+    image = Image.fromarray(image_data, 'L')  # Create image from numpy array
+    image.save(file_path)  # Save image to file
+
+def create_gif(image_data_list, file_path, duration=200):
+    frames = []
+    for image_data in image_data_list:
+        image_data = (2 - np.array(image_data)) * 255 / 2  # Convert 0s and 1s to 0s and 255s
+        image_data = image_data.astype(np.uint8)  # Convert to unsigned 8-bit integers
+        image = Image.fromarray(image_data, 'L')  # Create image from numpy array
+        frames.append(image)
+
+    frames[0].save(file_path, save_all=True, append_images=frames[1:], duration=duration, loop=0)
 
 if __name__ == "__main__":
     cfg = get_cfg()
@@ -30,6 +47,10 @@ if __name__ == "__main__":
     if not os.path.exists(simulation_dir):
         os.makedirs(simulation_dir)
 
+    image_dir = './output/train/image/'
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+
     env = HiNEST(look_ahead=5)
     agent = Agent(env.state_size, env.x_action_size, env.y_action_size, env.a_action_size, lr, gamma, lmbda, eps_clip, K_epoch)
     writer = SummaryWriter(log_dir)
@@ -52,24 +73,48 @@ if __name__ == "__main__":
         s = env.reset()
         update_step = 0
         r_epi = 0.0
+        efficiency = 0.0
+        batch_rate = 0.0
         avg_loss = 0.0
         done = False
+
+        if cfg.get_gif:
+            image_list = list()
+            temp = np.zeros((210, 45))
+            temp += env.model.plate.PixelPlate
+            image_list.append(temp)
 
         while not done:
             possible_actions = env.get_possible_actions()
             a, prob, mask = agent.get_action(s, possible_actions)
-            s_prime, r, efficiency, done = env.step(a)
+            possible_x, possible_y = env.get_possible_positions(a)
+            a_x, a_y, prob_x, prob_y, mask_x, mask_y = agent.get_position(s, possible_x, possible_y)
 
-            agent.put_data((s, a[0], a[1], a[2], r, s_prime, prob[0], prob[1], prob[2], mask, done))
+            s_prime, r, efficiency, done, overlap, temp = env.step((a_x, a_y, a))
+
+            agent.put_data((s, a_x, a_y, a, r, s_prime, prob_x, prob_y, prob, mask_x, mask_y, mask, done))
             s = s_prime
 
-            r_epi += r
+            r_epi = r
 
             update_step += 1
 
+            if cfg.get_gif:
+                if overlap:
+                    image_list.append(temp)
+                else:
+                    temp = np.zeros((210,45))
+                    temp += env.model.plate.PixelPlate
+                    image_list.append(temp)
+
             if done:
+                # image = env.model.plate.PixelPlate
+                # save_image(image, image_dir + str(e) + '.png')
+                if cfg.get_gif:
+                    create_gif(image_list, image_dir + str(e) + '.gif')
                 vessl.log(step=e, payload={'reward': r_epi})
                 vessl.log(step=e, payload={'efficiency': efficiency})
+                vessl.log(step=e, payload={'batch_rate': batch_rate})
                 break
             avg_loss += agent.train()
 
