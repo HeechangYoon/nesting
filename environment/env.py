@@ -33,8 +33,8 @@ class HiNEST(object):
 
         self.window = 5
 
-        self.x_action_size = int(math.ceil(plate_l_max / 100) / self.window)
-        self.y_action_size = int(math.ceil(plate_b_max / 100) / self.window)
+        self.x_action_size = math.ceil(plate_l_max / 100)
+        self.y_action_size = math.ceil(plate_b_max / 100)
         self.a_action_size = 24
         self.state_size = (plate.pixel_l_max, plate.pixel_b_max * (look_ahead + 1), 1)
 
