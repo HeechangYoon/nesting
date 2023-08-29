@@ -33,8 +33,12 @@ class HiNEST(object):
 
         self.window = 5
 
+        # self.x_action_size = int(math.ceil(plate_l_max / 100) / self.window)
+        # self.y_action_size = int(math.ceil(plate_b_max / 100) / self.window)
         self.x_action_size = math.ceil(plate_l_max / 100)
         self.y_action_size = math.ceil(plate_b_max / 100)
+
+
         self.a_action_size = 24
         self.state_size = (plate.pixel_l_max, plate.pixel_b_max * (look_ahead + 1), 1)
 
@@ -73,8 +77,10 @@ class HiNEST(object):
 
     def get_possible_positions(self, theta):
         size = self.model.part_list[0].PixelPart[theta].shape
-        possible_x = list(range(math.floor((self.model.plate.pixel_l - size[0]) / 5)+1))
-        possible_y = list(range(math.floor((self.model.plate.pixel_b - size[1]) / 5)+1))
+        # possible_x = list(range(math.floor((self.model.plate.pixel_l - size[0]) / 5)+1))
+        # possible_y = list(range(math.floor((self.model.plate.pixel_b - size[1]) / 5)+1))
+        possible_x = list(range(self.model.plate.pixel_l - size[0]))
+        possible_y = list(range(self.model.plate.pixel_b - size[1]))
         return possible_x, possible_y
 
     def _calculate_reward(self, done):
