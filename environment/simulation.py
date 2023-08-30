@@ -12,6 +12,7 @@ class Management():
         self.plate = plate
         self.part_list = part_list
         self.part_num = len(self.part_list)
+        self.step = 0
         self.batch_num = 0
 
     def assign(self, action):
@@ -40,6 +41,7 @@ class Management():
                 self.plate.PixelPlate = temp
                 self.batch_num += 1
 
+        self.step += 1
         return overlap, temp
 
 

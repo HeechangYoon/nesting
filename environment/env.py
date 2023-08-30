@@ -50,7 +50,7 @@ class HiNEST(object):
         if len(self.model.part_list) == 0:
             done = True
 
-        reward, efficiency, batch_rate = self._calculate_reward(done)
+        reward, efficiency, batch_rate = self._calculate_reward(done, overlap)
         next_state = self._get_state()
 
         return next_state, reward, efficiency, batch_rate, done, overlap, temp
@@ -83,7 +83,7 @@ class HiNEST(object):
         possible_y = list(range(self.model.plate.pixel_b - size[1]))
         return possible_x, possible_y
 
-    def _calculate_reward(self, done):
+    def _calculate_reward(self, done, overlap):
         reward = 0
         batch_rate = self.model.batch_num / self.model.part_num
 
@@ -96,10 +96,10 @@ class HiNEST(object):
         assigned = plate_a[0:end_row, 0:end_col]
 
         efficiency = np.sum(assigned) / ((end_row - 0) * (end_col - 0))
-        reward += efficiency
+        reward += self.model.step/self.model.part_num * efficiency
 
-        if done:
-            reward -= 1 - batch_rate
+        if overlap:
+            reward -= 1
 
         return reward, efficiency, batch_rate
 
