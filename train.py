@@ -80,9 +80,9 @@ if __name__ == "__main__":
 
         if cfg.get_gif:
             image_list = list()
-            temp = np.zeros((210, 45))
-            temp += env.model.plate.PixelPlate
-            image_list.append(temp)
+            zero = np.zeros((210, 270))
+            zero += s[:, :, 0]
+            image_list.append(zero)
 
         while not done:
             possible_actions = env.get_possible_actions()
@@ -100,12 +100,15 @@ if __name__ == "__main__":
             update_step += 1
 
             if cfg.get_gif:
+                zero = np.zeros((210, 270))
+                zero[:, 45:] += s[:, 45:, 0]
                 if overlap:
-                    image_list.append(temp)
+                    zero[:, :45] += temp
+
+                    image_list.append(zero)
                 else:
-                    temp = np.zeros((210,45))
-                    temp += env.model.plate.PixelPlate
-                    image_list.append(temp)
+                    zero[:, :45] += env.model.plate.PixelPlate
+                    image_list.append(zero)
 
             if done:
                 # image = env.model.plate.PixelPlate
