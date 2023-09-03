@@ -47,7 +47,7 @@ if __name__ == "__main__":
     if not os.path.exists(simulation_dir):
         os.makedirs(simulation_dir)
 
-    image_dir = './output/train/image/'
+    image_dir = '/output/train/image/'
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
 
@@ -114,7 +114,8 @@ if __name__ == "__main__":
                 # image = env.model.plate.PixelPlate
                 # save_image(image, image_dir + str(e) + '.png')
                 if cfg.get_gif:
-                    create_gif(image_list, image_dir + str(e) + '.gif')
+                    if e % 100 == 0:
+                        create_gif(image_list, image_dir + str(e) + '.gif')
                 vessl.log(step=e, payload={'reward': r_epi})
                 vessl.log(step=e, payload={'efficiency': efficiency})
                 vessl.log(step=e, payload={'batch_rate': batch_rate})
