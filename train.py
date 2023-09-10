@@ -114,7 +114,7 @@ if __name__ == "__main__":
                 # image = env.model.plate.PixelPlate
                 # save_image(image, image_dir + str(e) + '.png')
                 if cfg.get_gif:
-                    if e % 100 == 0:
+                    if e % 500 == 0:
                         create_gif(image_list, image_dir + str(e) + '.gif')
                 vessl.log(step=e, payload={'reward': r_epi})
                 vessl.log(step=e, payload={'efficiency': efficiency})
